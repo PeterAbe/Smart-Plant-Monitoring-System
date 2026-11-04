@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Plant Care Dashboard</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <script src="../static/js/dashboard.js" defer></script>
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="header-content">
+            <div>
+                <h1>Smart Plant Care</h1>
+                <p>Plant Monitoring and Management System</p>
+            </div>
+
+            <div class="system-status">
+                <span class="status-dot"></span>
+                System Online
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="card-heading">
+                    <span class="stat-icon">💧</span>
+                    <span class="stat-label">Soil Moisture</span>
+                </div>
+                <h2 id="moisture-value">--%</h2>
+                <p class="stat-description">Current soil moisture</p>
+            </div>
+
+            <div class="stat-card">
+                <div class="card-heading">
+                    <span class="stat-icon">☀️</span>
+                    <span class="stat-label">Sunlight</span>
+                </div>
+                <h2 id="sunlight-value">--</h2>
+                <p class="stat-description">Not monitored yet</p>
+            </div>
+
+            <div class="stat-card">
+                <div class="card-heading">
+                    <span class="stat-icon">🌡️</span>
+                    <span class="stat-label">Temperature</span>
+                </div>
+                <h2 id="temperature-value">--°C</h2>
+                <p class="stat-description">Not monitored yet</p>
+            </div>
+
+            <div class="stat-card">
+                <div class="card-heading">
+                    <span class="stat-icon">🌊</span>
+                    <span class="stat-label">Humidity</span>
+                </div>
+                <h2 id="humidity-value">--%</h2>
+                <p class="stat-description">Not monitored yet</p>
+            </div>
+
+        </section>
+
+        <section class="main-grid">
+            <div class="dashboard-card chart-card">
+
+                <div class="section-heading">
+                    <div>
+                        <h3>Moisture History</h3>
+                        <p>Historical soil moisture readings</p>
+                    </div>
+
+                    <span class="chart-period">Last 24 Hours</span>
+                </div>
+
+                <div class="chart-placeholder">
+                    <span>📊</span>
+                    <h4>No readings available</h4>
+                    <p>Moisture history will appear here once sensor data is recorded.</p>
+                </div>
+
+            </div>
+
+            <div class="dashboard-card watering-card">
+                <div class="section-heading">
+                    <div>
+                        <h3>Watering Status</h3>
+                        <p>Water pump monitoring</p>
+                    </div>
+                </div>
+
+                <div class="pump-status">
+                    <div class="pump-icon">🚿</div>
+                    <h2 id="pump-status">OFF</h2>
+                    <p>Water Pump</p>
+                </div>
+
+                <div class="watering-info">
+                    <div>
+                        <span>Last Watered</span>
+                        <strong id="last-watered">No records</strong>
+                    </div>
+
+                    <div>
+                        <span>Watering Mode</span>
+                        <strong id="watering-mode">Automatic</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="dashboard-card settings-card">
+            <div class="section-heading">
+                <div>
+                    <h3>System Settings</h3>
+                    <p>Configure your plant watering preferences</p>
+                </div>
+            </div>
+
+            <div class="settings-grid">
+
+                <div class="setting-item">
+                    <label for="moisture-threshold">
+                        Moisture Threshold
+                    </label>
+
+                    <p>Activate watering when moisture falls below this value.</p>
+
+                    <div class="input-group">
+                        <input
+                            type="number"
+                            id="moisture-threshold"
+                            min="0"
+                            max="100"
+                            value="15"
+                        >
+                        <span>%</span>
+                    </div>
+                </div>
+
+
+                <div class="setting-item">
+                    <label for="watering-duration">
+                        Watering Duration
+                    </label>
+
+                    <p>Set how long the pump should operate.</p>
+
+                    <div class="input-group">
+                        <input
+                            type="number"
+                            id="watering-duration"
+                            min="1"
+                            max="30"
+                            value="5"
+                        >
+                        <span>Seconds</span>
+                    </div>
+                </div>
+
+
+                <div class="setting-item">
+                    <label for="automatic-mode">
+                        Automatic Watering
+                    </label>
+
+                    <p>Allow the system to water the plant automatically.</p>
+
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="automatic-mode" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+
+                <div class="setting-item">
+                    <label>Manual Watering</label>
+
+                    <p>Manually activate the water pump.</p>
+
+                    <button type="button" class="water-button">
+                        Water Plant
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="settings-footer">
+                <button type="button" class="save-button">
+                    Save Settings
+                </button>
+            </div>
+
+        </section>
+
+        <footer class="footer">
+            <p>Smart Plant Care & Monitoring System | SEP 769</p>
+        </footer>
+
+    </main>
+
+</body>
+</html>
