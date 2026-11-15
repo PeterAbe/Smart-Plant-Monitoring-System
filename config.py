@@ -28,8 +28,8 @@ MAX_MOISTURE = 100
 MIN_HUMIDITY = 0
 MAX_HUMIDITY = 100
 # temperature in Celsius, if the temperature is not within this range, we raise a warning for plant comfort
-MIN_TEMPERATURE_C = -40
-MAX_TEMPERATURE_C = 85
+MIN_TEMPERATURE = -40
+MAX_TEMPERATURE = 85
 
 #logging interval in seconds, how often we log the moisture level to the database, can change to 1 seconds for testing purposes, but default is 60 seconds
 LOGGING_INTERVAL_SECONDS = 60
