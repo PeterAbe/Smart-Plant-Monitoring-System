@@ -1,0 +1,13 @@
+data/*.db
+data/*.db-*
+data/*.sqlite
+data/*.sqlite3
+!data/.gitkeep
+venv/
+.venv/
+.idea/
+env/
+.env
+Thumbs.db
+.DS_Store
+.vscode/
