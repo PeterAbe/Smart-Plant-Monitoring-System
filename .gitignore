@@ -11,3 +11,6 @@ env/
 Thumbs.db
 .DS_Store
 .vscode/
+_pycache__/
+*.py[cod]
+.pytest_cache/
