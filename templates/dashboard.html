@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Plant Care Dashboard</title>
-    <link rel="stylesheet" href="../static/css/style.css">
-    <script src="../static/js/dashboard.js" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
 </head>
 
 <body>
@@ -32,7 +32,7 @@
                     <span class="stat-icon">💧</span>
                     <span class="stat-label">Soil Moisture</span>
                 </div>
-                <h2 id="moisture-value">--%</h2>
+                <h2 id="moisture-value">{{ plant_data.moisture }}%</h2>
                 <p class="stat-description">Current soil moisture</p>
             </div>
 
@@ -41,7 +41,7 @@
                     <span class="stat-icon">🌡️</span>
                     <span class="stat-label">Temperature</span>
                 </div>
-                <h2 id="temperature-value">--°C</h2>
+                <h2 id="temperature-value">{{ plant_data.temperature }}°C</h2>
                 <p class="stat-description">Not monitored yet</p>
             </div>
 
@@ -50,7 +50,7 @@
                     <span class="stat-icon">🌊</span>
                     <span class="stat-label">Humidity</span>
                 </div>
-                <h2 id="humidity-value">--%</h2>
+                <h2 id="humidity-value">{{ plant_data.humidity }}%</h2>
                 <p class="stat-description">Not monitored yet</p>
             </div>
 
@@ -86,19 +86,19 @@
 
                 <div class="pump-status">
                     <div class="pump-icon">🚿</div>
-                    <h2 id="pump-status">OFF</h2>
+                    <h2 id="pump-status">{{ plant_data.pump_status }}</h2>
                     <p>Water Pump</p>
                 </div>
 
                 <div class="watering-info">
                     <div>
                         <span>Last Watered</span>
-                        <strong id="last-watered">No records</strong>
+                        <strong id="last-watered">{{ plant_data.last_watered }}</strong>
                     </div>
 
                     <div>
                         <span>Watering Mode</span>
-                        <strong id="watering-mode">Automatic</strong>
+                        <strong id="watering-mode">{{ 'Automatic' if system_settings.auto_mode else 'Manual' }}</strong>
                     </div>
                 </div>
 
@@ -147,9 +147,10 @@
                         <input
                             type="number"
                             id="watering-duration"
+                            name="watering_duration"
                             min="1"
                             max="30"
-                            value="5"
+                            value="{{ system_settings.duration }}"
                         >
                         <span>Seconds</span>
                     </div>
@@ -164,7 +165,7 @@
                     <p>Allow the system to water the plant automatically.</p>
 
                     <label class="toggle-switch">
-                        <input type="checkbox" id="automatic-mode" checked>
+                        <input type="checkbox" id="automatic-mode" name="automatic_mode"{% if system_settings.auto_mode %}checked{% endif %}>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
