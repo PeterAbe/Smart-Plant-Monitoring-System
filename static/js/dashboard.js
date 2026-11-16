@@ -11,14 +11,6 @@ const waterButton = document.querySelector(".water-button");
 const saveButton = document.querySelector(".save-button");
 
 
-function updateDashboard() {
-
-    const sampleMoisture = 45;
-
-    moistureValue.textContent = sampleMoisture + "%";
-
-}
-
 
 automaticMode.addEventListener("change", function () {
 
@@ -31,26 +23,6 @@ automaticMode.addEventListener("change", function () {
 });
 
 
-waterButton.addEventListener("click", function () {
-
-    if (pumpStatus.textContent === "ON") {
-        alert("The water pump is already running.");
-        return;
-    }
-
-    const confirmWatering = confirm("Do you want to water the plant?");
-
-    if (confirmWatering) {
-
-        pumpStatus.textContent = "ON";
-
-        alert("Manual watering requested.");
-
-    
-
-    }
-
-});
 
 
 saveButton.addEventListener("click", function () {
@@ -76,7 +48,26 @@ saveButton.addEventListener("click", function () {
 
 });
 
+document.getElementById('manual-water-btn').addEventListener('click', function() {
+    const durationValue = document.getElementById('watering-duration').value;
+    fetch('/api/manual-water', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ duration: parseInt(durationValue) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.status === "success") {
+            alert("Pump started successfully for " + durationValue + " seconds!");
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
 
 
 
-updateDashboard();
+
+
+

@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for, render_template, request
+from flask import Flask, redirect, url_for, render_template, request, jsonify
 import os
 #from hardware.moisture_sensor import *
 #from hardware.water_pump import *
@@ -47,4 +47,13 @@ def save_settings():
     print(f"Updated System Settings: {system_settings}") 
     
     return redirect(url_for("dashboard"))
+
+#@app.route('/api/manual-water', methods=['POST'])
+#def api_manual_water():
+    #data = request.get_json()
+    #duration = data.get('duration', 5)  # Default to 5 seconds if none found
+    #manual_watering(duration)
+    
+    # Instantly reply to the browser so the UI stays super responsive
+    #return jsonify({"status": "success", "message": f"Pump activated for {duration}s"})
 

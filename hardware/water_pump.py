@@ -1,11 +1,10 @@
-import time
 from gpiozero import OutputDevice
 
 relay = OutputDevice(17, active_high=True, initial_value=False)
 
-def TurnO():
+def pump_on():
     relay.on()
         
     
-def TurnOff():
+def pump_off():
     relay.off()
