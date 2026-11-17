@@ -7,67 +7,47 @@ const automaticMode = document.getElementById("automatic-mode");
 const moistureThreshold = document.getElementById("moisture-threshold");
 const wateringDuration = document.getElementById("watering-duration");
 
-const waterButton = document.querySelector(".water-button");
-const saveButton = document.querySelector(".save-button");
+const waterButton = document.getElementById("manual-water-btn");
 
 
+// Manual watering
+waterButton.addEventListener("click", function () {
 
-automaticMode.addEventListener("change", function () {
+    const durationValue = Number(wateringDuration.value);
 
-    if (automaticMode.checked) {
-        alert("Automatic watering enabled");
-    } else {
-        alert("Automatic watering disabled");
-    }
-
-});
-
-
-
-
-saveButton.addEventListener("click", function () {
-
-    const threshold = Number(moistureThreshold.value);
-    const duration = Number(wateringDuration.value);
-
-    if (threshold < 0 || threshold > 100 || moistureThreshold.value === "") {
-        alert("Moisture threshold must be between 0 and 100.");
+    if (
+        !Number.isInteger(durationValue) ||
+        durationValue < 1 ||
+        durationValue > 30
+    ) {
+        alert("Watering duration must be between 1 and 30 seconds.");
         return;
     }
 
-    if (duration < 1 || duration > 60 || wateringDuration.value === "") {
-        alert("Watering duration must be between 1 and 60 seconds.");
-        return;
-    }
-
-    alert(
-        "Settings saved!\n" +
-        "Moisture Threshold: " + threshold + "%\n" +
-        "Watering Duration: " + duration + " seconds"
-    );
-
-});
-
-document.getElementById('manual-water-btn').addEventListener('click', function() {
-    const durationValue = document.getElementById('watering-duration').value;
     fetch('/api/manual-water', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ duration: parseInt(durationValue) })
+        body: JSON.stringify({
+            duration: durationValue
+        })
     })
-    .then(response => response.json())
-    .then(data => {
-        if(data.status === "success") {
-            alert("Pump started successfully for " + durationValue + " seconds!");
+    .then(async response => {
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Unable to start watering.");
         }
+
+        return data;
     })
-    .catch(error => console.error('Error:', error));
+    .then(data => {
+        alert(data.message);
+    })
+    .catch(error => {
+        alert(error.message);
+        console.error('Error:', error);
+    });
+
 });
-
-
-
-
-
-

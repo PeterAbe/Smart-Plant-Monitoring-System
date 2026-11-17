@@ -1,20 +1,18 @@
+
 from flask import Flask, redirect, url_for, render_template, request, jsonify
-import os
-#from hardware.moisture_sensor import *
-#from hardware.water_pump import *
-#from services.watering import *
+
+from database.models import (
+    get_dashboard_settings,
+    get_latest_reading,
+    update_dashboard_settings
+)
+
+from services.watering import manual_watering
+
 
 # Initialize the Flask application
 app = Flask(__name__)
 
-
-#current_moisture = Read_Moisture
-
-system_settings = {
-    "threshold": 25,
-    "duration": 5,
-    "auto_mode": True
-}
 
 live_plant_data = {
     "moisture": 20,
@@ -25,35 +23,68 @@ live_plant_data = {
 }
 
 
-# Define a route for the homepage
+# Homepage
 @app.route('/')
 def home():
     return redirect(url_for("dashboard"))
 
+
+# Dashboard
 @app.route('/dashboard')
 def dashboard():
+    latest_reading = get_latest_reading()
+    system_settings = get_dashboard_settings()
+
+    if latest_reading:
+        live_plant_data["moisture"] = latest_reading["moisture"]
+        live_plant_data["temperature"] = latest_reading["temperature"]
+        live_plant_data["humidity"] = latest_reading["humidity"]
+
     return render_template(
         "dashboard.html",
-        plant_data=live_plant_data, 
-        system_settings=system_settings)
-    
+        plant_data=live_plant_data,
+        system_settings=system_settings
+    )
+
+
+# Save dashboard settings
 @app.route('/save-settings', methods=['POST'])
 def save_settings():
-    system_settings["threshold"] = int(request.form.get("moisture_threshold", 25))
-    system_settings["duration"] = int(request.form.get("watering_duration", 5))
-    
-    system_settings["auto_mode"] = "automatic_mode" in request.form
-    
-    print(f"Updated System Settings: {system_settings}") 
-    
+    threshold = int(request.form.get("moisture_threshold", 30))
+    duration = int(request.form.get("watering_duration", 5))
+    automatic_mode = "automatic_mode" in request.form
+
+    update_dashboard_settings(
+        moisture_threshold=threshold,
+        watering_duration=duration,
+        automatic_watering_enabled=automatic_mode
+    )
+
     return redirect(url_for("dashboard"))
 
-#@app.route('/api/manual-water', methods=['POST'])
-#def api_manual_water():
-    #data = request.get_json()
-    #duration = data.get('duration', 5)  # Default to 5 seconds if none found
-    #manual_watering(duration)
-    
-    # Instantly reply to the browser so the UI stays super responsive
-    #return jsonify({"status": "success", "message": f"Pump activated for {duration}s"})
 
+# Manual watering API
+@app.route('/api/manual-water', methods=['POST'])
+def api_manual_water():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "status": "error",
+            "message": "No watering data received."
+        }), 400
+
+    duration = data.get("duration", 5)
+
+    try:
+        manual_watering(duration)
+    except ValueError as error:
+        return jsonify({
+            "status": "error",
+            "message": str(error)
+        }), 400
+
+    return jsonify({
+        "status": "success",
+        "message": f"Pump activated for {duration} seconds."
+    })
