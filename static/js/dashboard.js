@@ -1,4 +1,3 @@
-
 const moistureValue = document.getElementById("moisture-value");
 const pumpStatus = document.getElementById("pump-status");
 const lastWatered = document.getElementById("last-watered");
