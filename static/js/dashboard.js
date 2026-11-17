@@ -1,3 +1,4 @@
+
 const moistureValue = document.getElementById("moisture-value");
 const pumpStatus = document.getElementById("pump-status");
 const lastWatered = document.getElementById("last-watered");
@@ -50,3 +51,79 @@ waterButton.addEventListener("click", function () {
     });
 
 });
+
+
+// Moisture history chart
+const chartCanvas = document.getElementById("moisture-chart");
+const chartMessage = document.getElementById("chart-message");
+
+if (chartCanvas) {
+
+    fetch('/api/moisture-history')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Unable to load moisture history.");
+            }
+
+            return response.json();
+        })
+        .then(readings => {
+
+            if (readings.length === 0) {
+                chartCanvas.style.display = "none";
+                chartMessage.style.display = "block";
+                return;
+            }
+
+            new Chart(chartCanvas, {
+                type: 'line',
+
+                data: {
+                    labels: readings.map(reading =>
+                        new Date(reading.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })
+                    ),
+
+                    datasets: [{
+                        label: 'Soil Moisture (%)',
+                        data: readings.map(reading => reading.moisture),
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Moisture (%)'
+                            }
+                        },
+
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error("Chart error:", error);
+
+            chartCanvas.style.display = "none";
+            chartMessage.textContent = "Unable to load moisture history.";
+            chartMessage.style.display = "block";
+        });
+}

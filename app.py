@@ -1,9 +1,9 @@
-
 from flask import Flask, redirect, url_for, render_template, request, jsonify
-
+from datetime import datetime, timedelta, timezone
 from database.models import (
     get_dashboard_settings,
     get_latest_reading,
+    get_readings,
     update_dashboard_settings
 )
 
@@ -46,6 +46,26 @@ def dashboard():
         system_settings=system_settings
     )
 
+@app.route('/api/moisture-history')
+def api_moisture_history():
+    end_time = datetime.now(timezone.utc)
+    start_time = end_time - timedelta(hours=24)
+
+    readings = get_readings(
+        start_time=start_time,
+        end_time=end_time,
+        limit=1000
+    )
+
+    history = [
+        {
+            "timestamp": reading["timestamp"],
+            "moisture": reading["moisture"]
+        }
+        for reading in readings
+    ]
+
+    return jsonify(history)
 
 # Save dashboard settings
 @app.route('/save-settings', methods=['POST'])

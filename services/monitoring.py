@@ -61,7 +61,7 @@ def trigger_automatic_watering(average_moisture):
         return False
 
     duration = settings["watering_duration"]
-    manual_watering(duration)
+    manual_watering(duration, triggered_by="automatic", moisture_before=average_moisture)
 
     last_automatic_watering_time = current_time
 

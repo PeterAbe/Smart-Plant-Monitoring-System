@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Plant Care Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
 </head>
 
@@ -75,10 +76,11 @@
                     <span class="chart-period">Last 24 Hours</span>
                 </div>
 
-                <div class="chart-placeholder">
-                    <span>📊</span>
-                    <h4>No readings available</h4>
-                    <p>Moisture history will appear here once sensor data is recorded.</p>
+                <div class="chart-container">
+                    <canvas id="moisture-chart"></canvas>
+                    <p id="chart-message" style="display: none;">
+                    No readings available yet.
+                    </p>
                 </div>
 
             </div>
