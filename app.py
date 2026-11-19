@@ -1,12 +1,6 @@
 from flask import Flask, redirect, url_for, render_template, request, jsonify
 from datetime import datetime, timedelta, timezone
-from database.models import (
-    get_dashboard_settings,
-    get_latest_reading,
-    get_readings,
-    update_dashboard_settings
-)
-
+from database.models import get_dashboard_settings, get_latest_reading, get_readings, update_dashboard_settings
 from services.watering import manual_watering
 
 
