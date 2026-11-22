@@ -126,28 +126,199 @@ def get_readings(start_time=None,end_time=None,limit=1440, conn=None):
     finally:
         if owns_connection:
             conn.close()
+ 
     
 # function for getting a days worth of reading 
 # returns all readings for one calendar day, oldest first, as a list of dicts
 # returns [] if there are none
-def get_readings_for_day(day=None,timezone=None,conn=None):
+def get_readings_for_day(day=None, tz=None, conn=None):
     if day is None:
-        day = datetime.now(timezone).date()
+        day = datetime.now(tz).date()
     elif isinstance(day, datetime):
         raise ValueError("Pass a date or in format of 'YYYY-MM-DD' string, not a datetime")
-    elif isinstance(day,date):
+    elif isinstance(day, date):
         pass
     elif isinstance(day, str):
         day = date.fromisoformat(day)
     else:
         raise ValueError("day must be a 'YYYY-MM-DD' string or a date object.")
-
     def _midnight(day):
-        if timezone is None:
+        if tz is None:
             return datetime.combine(day, time()).astimezone()
-        return datetime.combine(day, time(), tzinfo=timezone)
+        return datetime.combine(day, time(), tzinfo=tz)
     start = _midnight(day)
     end = _midnight(day + timedelta(days=1))
     interval = max(1, config.LOGGING_INTERVAL_SECONDS)
-    limit = (25*60*60)//interval+100
-    return get_readings(start_time=start,end_time=end,limit=limit,conn=conn)
+    limit = (25 * 60 * 60) // interval + 100
+    return get_readings(start_time=start, end_time=end, limit=limit, conn=conn)
+
+# function to validate watering information
+
+# Function to add a watering event to the database
+def add_watering_event(duration,triggered_by,moisture_before,moisture_after=None,extra_text=None,timestamp=None,conn=None):
+    # Validate watering duration
+    if isinstance(duration, bool) or not isinstance(duration, int):
+        raise ValueError("Watering duration must be an integer.")
+    if not (
+        config.MIN_WATERING_DURATION_SECONDS
+        <= duration
+        <= config.MAX_WATERING_DURATION_SECONDS
+    ):
+        raise ValueError("Watering duration is out of range.")
+    # Validate how watering was triggered
+    if triggered_by not in ("manual", "automatic"):
+        raise ValueError("triggered_by must be 'manual' or 'automatic'.")
+    # Validate moisture readings
+    if moisture_before is None or not (
+        config.MIN_MOISTURE <= moisture_before <= config.MAX_MOISTURE
+    ):
+        raise ValueError("Invalid moisture_before value.")
+    if moisture_after is not None:
+        if not (
+            config.MIN_MOISTURE <= moisture_after <= config.MAX_MOISTURE
+        ):
+            raise ValueError("Invalid moisture_after value.")
+    # Set or normalize timestamp
+    if timestamp is None:
+        timestamp = datetime.now(timezone.utc).isoformat(timespec='seconds')
+    else:
+        timestamp = _normalize_timestamp(timestamp)
+    # Convert optional extra information to JSON
+    if extra_text is not None:
+        if not isinstance(extra_text, dict):
+            raise ValueError("Extra data must be a dictionary.")
+        extra_text = json.dumps(extra_text)
+    # Connect to database if no connection was supplied
+    owns_connection = False
+    if conn is None:
+        conn = db_connect()
+        owns_connection = True
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO watering_events (timestamp,duration,triggered_by,moisture_before,moisture_after,extra_text)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (timestamp,duration,triggered_by,moisture_before,moisture_after,extra_text))
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        if owns_connection:
+            conn.close()
+
+
+# Function to retrieve watering history from the database
+def get_watering_events(limit=100, conn=None):
+    # Validate result limit
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
+        raise ValueError("Limit must be a positive integer.")
+    owns_connection = False
+    if conn is None:
+        conn = db_connect()
+        owns_connection = True
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM watering_events ORDER BY timestamp DESC, id DESC LIMIT ?
+        """, (limit,))
+        rows = cursor.fetchall()
+        events = []
+        for row in rows:
+            event = dict(row)
+            if event["extra_text"] is not None:
+                event["extra_text"] = json.loads(event["extra_text"])
+            events.append(event)
+        return events
+    finally:
+        if owns_connection:
+            conn.close()
+
+
+# Function to retrieve dashboard settings
+def get_dashboard_settings(conn=None):
+    owns_connection = False
+    if conn is None:
+        conn = db_connect()
+        owns_connection = True
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM dashboard_settings WHERE id = 1
+        """)
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        settings = dict(row)
+        settings["automatic_watering_enabled"] = bool(
+            settings["automatic_watering_enabled"]
+        )
+        return settings
+    finally:
+        if owns_connection:
+            conn.close()
+
+
+# Function to update dashboard settings
+def update_dashboard_settings(plant_name=None,moisture_threshold=None,watering_duration=None,automatic_watering_enabled=None,temperature_unit=None,conn=None):
+    # Validate settings before updating
+    if plant_name is not None and not plant_name.strip():
+        raise ValueError("Plant name cannot be empty.")
+    if moisture_threshold is not None:
+        if not (
+            config.MIN_MOISTURE_THRESHOLD
+            <= moisture_threshold
+            <= config.MAX_MOISTURE_THRESHOLD
+        ):
+            raise ValueError("Moisture threshold is out of range.")
+    if watering_duration is not None:
+        if isinstance(watering_duration, bool) or not isinstance(watering_duration, int):
+            raise ValueError("Watering duration must be an integer.")
+        if not (
+            config.MIN_WATERING_DURATION_SECONDS
+            <= watering_duration
+            <= config.MAX_WATERING_DURATION_SECONDS
+        ):
+            raise ValueError("Watering duration is out of range.")
+    if automatic_watering_enabled is not None:
+        if not isinstance(automatic_watering_enabled, bool):
+            raise ValueError("Automatic watering setting must be True or False.")
+    if temperature_unit is not None:
+        if temperature_unit not in ("C", "F"):
+            raise ValueError("Temperature unit must be C or F.")
+    # Build update query using only supplied settings
+    updates = []
+    params = []
+    if plant_name is not None:
+        updates.append("plant_name = ?")
+        params.append(plant_name.strip())
+    if moisture_threshold is not None:
+        updates.append("moisture_threshold = ?")
+        params.append(moisture_threshold)
+    if watering_duration is not None:
+        updates.append("watering_duration = ?")
+        params.append(watering_duration)
+    if automatic_watering_enabled is not None:
+        updates.append("automatic_watering_enabled = ?")
+        params.append(int(automatic_watering_enabled))
+    if temperature_unit is not None:
+        updates.append("temperature_unit = ?")
+        params.append(temperature_unit)
+    if not updates:
+        return
+    owns_connection = False
+    if conn is None:
+        conn = db_connect()
+        owns_connection = True
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            f"""
+            UPDATE dashboard_settings SET {", ".join(updates)} WHERE id = 1
+            """,
+            params
+        )
+        if cursor.rowcount == 0:
+            raise ValueError("Dashboard settings have not been initialized.")
+        conn.commit()
+    finally:
+        if owns_connection:
+            conn.close()

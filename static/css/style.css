@@ -63,7 +63,7 @@ body {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     margin-bottom: 25px;
 }
@@ -147,31 +147,11 @@ body {
     font-size: 12px;
 }
 
-.chart-placeholder {
-    min-height: 250px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border: 2px dashed #dce8df;
-    border-radius: 10px;
-    padding: 20px;
-}
 
-.chart-placeholder span {
-    font-size: 35px;
-    margin-bottom: 10px;
-}
-
-.chart-placeholder h4 {
-    margin: 5px 0;
-    color: #52665a;
-}
-
-.chart-placeholder p {
-    color: #9aa59e;
-    font-size: 13px;
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
 }
 
 

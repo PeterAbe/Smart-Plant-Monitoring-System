@@ -24,6 +24,9 @@ DEFAULT_TEMPERATURE_UNITS = "C"
 # percentage of moisture, 0-100%, if the moisture is not within this range, we raise a warning for plant comfort
 MIN_MOISTURE = 0
 MAX_MOISTURE = 100
+# percentage of moisture, 0-100%, allowed range for user input moisture threshold
+MIN_MOISTURE_THRESHOLD = 0
+MAX_MOISTURE_THRESHOLD = 100
 # percentage of humidity, 0-100%, if the humidity is not within this range, we raise a warning for plant comfort
 MIN_HUMIDITY = 0
 MAX_HUMIDITY = 100
@@ -33,3 +36,8 @@ MAX_TEMPERATURE = 85
 
 #logging interval in seconds, how often we log the moisture level to the database, can change to 1 seconds for testing purposes, but default is 60 seconds
 LOGGING_INTERVAL_SECONDS = 60
+#monitoring the moisture content and the interval is in seconds
+MONITORING_INTERVAL_SECONDS = 10
+# allowed amount of seconds for watering the soil at any given time in seconds
+MIN_WATERING_DURATION_SECONDS = 1
+MAX_WATERING_DURATION_SECONDS = 30
