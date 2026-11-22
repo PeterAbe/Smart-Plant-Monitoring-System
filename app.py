@@ -1,7 +1,8 @@
 from flask import Flask, redirect, url_for, render_template, request, jsonify
 from datetime import datetime, timedelta, timezone
-from database.models import get_dashboard_settings, get_latest_reading, get_readings, update_dashboard_settings
+from database.models import get_dashboard_settings, get_latest_reading, get_readings, update_dashboard_settings, get_watering_events
 from services.watering import manual_watering
+from hardware.water_pump import get_pump_status
 
 
 # Initialize the Flask application
@@ -13,7 +14,7 @@ live_plant_data = {
     "temperature": 22.4,
     "humidity": 55,
     "pump_status": "OFF",
-    "last_watered": "Today at 02:14 PM"
+    "last_watered": "Never"
 }
 
 
@@ -33,6 +34,27 @@ def dashboard():
         live_plant_data["moisture"] = latest_reading["moisture"]
         live_plant_data["temperature"] = latest_reading["temperature"]
         live_plant_data["humidity"] = latest_reading["humidity"]
+        
+    live_plant_data["pump_status"] = get_pump_status()
+
+    watering_events = get_watering_events(limit=1)
+
+    if watering_events:
+        last_watered = datetime.fromisoformat(
+        watering_events[0]["timestamp"]
+    )
+
+        if last_watered.tzinfo is not None:
+            last_watered = last_watered.astimezone()
+
+        live_plant_data["last_watered"] = last_watered.strftime(
+            "Today at %I:%M %p"
+    )
+    else:
+        live_plant_data["last_watered"] = "Never"
+    
+
+        
 
     return render_template(
         "dashboard.html",
@@ -61,10 +83,43 @@ def api_moisture_history():
 
     return jsonify(history)
 
+@app.route('/api/dashboard-data')
+def api_dashboard_data():
+    latest_reading = get_latest_reading()
+    system_settings = get_dashboard_settings()
+    watering_events = get_watering_events(limit=1)
+
+    last_watered = "Never"
+
+    if watering_events:
+        last_watered_time = datetime.fromisoformat(
+            watering_events[0]["timestamp"]
+        )
+
+        if last_watered_time.tzinfo is not None:
+            last_watered_time = last_watered_time.astimezone()
+
+        last_watered = last_watered_time.strftime(
+            "Today at %I:%M %p"
+        )
+
+    return jsonify({
+        "moisture": latest_reading["moisture"] if latest_reading else None,
+        "temperature": latest_reading["temperature"] if latest_reading else None,
+        "humidity": latest_reading["humidity"] if latest_reading else None,
+        "pump_status": get_pump_status(),
+        "last_watered": last_watered,
+        "watering_mode": (
+            "Automatic"
+            if system_settings["automatic_watering_enabled"]
+            else "Manual"
+        )
+    })
+
 # Save dashboard settings
 @app.route('/save-settings', methods=['POST'])
 def save_settings():
-    threshold = int(request.form.get("moisture_threshold", 30))
+    threshold = int(float(request.form.get("moisture_threshold", 30)))
     duration = int(request.form.get("watering_duration", 5))
     automatic_mode = "automatic_mode" in request.form
 

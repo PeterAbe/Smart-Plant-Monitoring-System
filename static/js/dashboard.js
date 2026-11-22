@@ -1,11 +1,12 @@
+
 const moistureValue = document.getElementById("moisture-value");
+const temperatureValue = document.getElementById("temperature-value");
+const humidityValue = document.getElementById("humidity-value");
 const pumpStatus = document.getElementById("pump-status");
 const lastWatered = document.getElementById("last-watered");
+const wateringMode = document.getElementById("watering-mode");
 
-const automaticMode = document.getElementById("automatic-mode");
-const moistureThreshold = document.getElementById("moisture-threshold");
 const wateringDuration = document.getElementById("watering-duration");
-
 const waterButton = document.getElementById("manual-water-btn");
 
 
@@ -42,21 +43,64 @@ waterButton.addEventListener("click", function () {
         return data;
     })
     .then(data => {
-        alert(data.message);
+        console.log(data.message);
     })
     .catch(error => {
-        alert(error.message);
         console.error('Error:', error);
     });
 
 });
 
 
+// Automatically update dashboard information
+function updateDashboard() {
+
+    fetch('/api/dashboard-data')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Unable to load dashboard data.");
+            }
+
+            return response.json();
+        })
+        .then(data => {
+
+            if (data.moisture !== null) {
+                moistureValue.textContent = data.moisture + "%";
+            }
+
+            temperatureValue.textContent =
+                data.temperature !== null
+                    ? data.temperature + "°C"
+                    : "--";
+
+            humidityValue.textContent =
+                data.humidity !== null
+                    ? data.humidity + "%"
+                    : "--";
+
+            pumpStatus.textContent = data.pump_status;
+            lastWatered.textContent = data.last_watered;
+            wateringMode.textContent = data.watering_mode;
+
+        })
+        .catch(error => {
+            console.error("Dashboard update error:", error);
+        });
+}
+
+
 // Moisture history chart
 const chartCanvas = document.getElementById("moisture-chart");
 const chartMessage = document.getElementById("chart-message");
 
-if (chartCanvas) {
+let moistureChart = null;
+
+function updateMoistureChart() {
+
+    if (!chartCanvas) {
+        return;
+    }
 
     fetch('/api/moisture-history')
         .then(response => {
@@ -74,55 +118,79 @@ if (chartCanvas) {
                 return;
             }
 
-            new Chart(chartCanvas, {
-                type: 'line',
+            chartCanvas.style.display = "block";
+            chartMessage.style.display = "none";
 
-                data: {
-                    labels: readings.map(reading =>
-                        new Date(reading.timestamp).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })
-                    ),
+            const labels = readings.map(reading =>
+                new Date(reading.timestamp).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+            );
 
-                    datasets: [{
-                        label: 'Soil Moisture (%)',
-                        data: readings.map(reading => reading.moisture),
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: false
-                    }]
-                },
+            const moistureData = readings.map(reading => reading.moisture);
 
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+            if (moistureChart === null) {
 
-                    scales: {
-                        y: {
-                            min: 0,
-                            max: 100,
-                            title: {
-                                display: true,
-                                text: 'Moisture (%)'
-                            }
-                        },
+                moistureChart = new Chart(chartCanvas, {
+                    type: 'line',
 
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Time'
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Soil Moisture (%)',
+                            data: moistureData,
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: false
+                        }]
+                    },
+
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        scales: {
+                            y: {
+                                min: 0,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Moisture (%)'
+                                }
+                            },
+
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Time'
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+
+            } else {
+
+                moistureChart.data.labels = labels;
+                moistureChart.data.datasets[0].data = moistureData;
+                moistureChart.update();
+
+            }
+
         })
         .catch(error => {
             console.error("Chart error:", error);
-
-            chartCanvas.style.display = "none";
             chartMessage.textContent = "Unable to load moisture history.";
             chartMessage.style.display = "block";
         });
 }
+
+
+// Initial updates
+updateDashboard();
+updateMoistureChart();
+
+// Automatic refresh intervals
+setInterval(updateDashboard, 2000);
+setInterval(updateMoistureChart, 10000);
